@@ -1232,15 +1232,23 @@ async function soumettreFormLead() {
     fbq('track', 'Lead', { content_name: 'terrain_analyse' });
   }
 
-  // 7. Envoi en arrière-plan vers Make
-  const WEBHOOK = ''; // ← coller ici l'URL du webhook Make
-  if (WEBHOOK) {
-    fetch(WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prenom, nom, email, tel, m2_diviser: m2, date: new Date().toISOString() })
-    }).catch(() => {});
-  }
+  // 7. Envoi web3forms → terrain@lecarremaison.fr
+  fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      access_key: 'bf26c9a3-c569-4e2e-8e65-4e7b4e3f1416',
+      subject: 'Nouvelle analyse terrain — Le Carré Maison',
+      from_name: 'Le Carré Maison',
+      prenom, nom, email, tel,
+      m2_diviser: m2,
+      date: new Date().toISOString()
+    })
+  }).catch(() => {});
+
+  // 8. (futur) Webhook Make — coller l'URL ici quand quota reset
+  // const WEBHOOK = '';
+  // if (WEBHOOK) fetch(WEBHOOK, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prenom,nom,email,tel,m2_diviser:m2,date:new Date().toISOString()}) }).catch(()=>{});
 }
 
 // ─────────────────────────────────────────
