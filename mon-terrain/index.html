@@ -1159,15 +1159,16 @@ function remplirFiche() {
 // ─────────────────────────────────────────
 //  FORMULAIRE LEAD + RÉVÉLATION RÉSULTATS
 // ─────────────────────────────────────────
-function soumettreFormLead() {
+async function soumettreFormLead() {
   const prenom = document.getElementById('lead-prenom').value.trim();
   const nom    = document.getElementById('lead-nom').value.trim();
   const email  = document.getElementById('lead-email').value.trim();
   const tel    = document.getElementById('lead-tel').value.trim();
   const m2     = document.getElementById('inp-m2').value.trim();
   const errEl  = document.getElementById('lead-err');
+  const btn    = document.querySelector('.lead-btn');
 
-  // Validation email obligatoire
+  // 1. Format check rapide
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
   if (!emailOk) {
     document.getElementById('lead-email').classList.add('err');
@@ -1179,24 +1180,59 @@ function soumettreFormLead() {
   document.getElementById('lead-email').classList.remove('err');
   errEl.style.display = 'none';
 
-  // Masquer le formulaire et la zone brouillée
+  // 2. Loading
+  if (btn) { btn.disabled = true; btn.textContent = 'Vérification…'; }
+
+  // 3. Vérification MX + anti-jetable (disify.com — gratuit, sans clé)
+  let domainOk = true;
+  let isDisposable = false;
+  try {
+    const resp = await Promise.race([
+      fetch(`https://disify.com/api/email/${encodeURIComponent(email)}`),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000))
+    ]);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (!data.format || !data.dns) domainOk = false;
+      if (data.disposable) isDisposable = true;
+    }
+  } catch (_) {
+    // API injoignable → on laisse passer (fail open)
+  }
+
+  if (!domainOk) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Voir mon analyse →'; }
+    document.getElementById('lead-email').classList.add('err');
+    errEl.textContent = 'Cette adresse email semble incorrecte. Vérifiez qu\'elle est bien valide.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (isDisposable) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Voir mon analyse →'; }
+    document.getElementById('lead-email').classList.add('err');
+    errEl.textContent = 'Les adresses email temporaires ne sont pas acceptées. Utilisez votre email principal.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // 4. Masquer formulaire + zone brouillée
   document.getElementById('lead-form').style.display = 'none';
   document.getElementById('blurred-zone').style.display = 'none';
   document.getElementById('ready-banner').style.display = 'none';
 
-  // Remplir et révéler la fiche analyse
+  // 5. Remplir et révéler la fiche analyse
   remplirFiche();
   const rr = document.getElementById('real-results');
   rr.style.cssText = 'display:block;opacity:0;transition:opacity .5s;';
   requestAnimationFrame(() => requestAnimationFrame(() => { rr.style.opacity = '1'; }));
   rr.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Pixel Lead
+  // 6. Pixel Lead
   if (typeof fbq === 'function') {
     fbq('track', 'Lead', { content_name: 'terrain_analyse' });
   }
 
-  // Envoi en arrière-plan vers Make (configurer l'URL du webhook)
+  // 7. Envoi en arrière-plan vers Make
   const WEBHOOK = ''; // ← coller ici l'URL du webhook Make
   if (WEBHOOK) {
     fetch(WEBHOOK, {
