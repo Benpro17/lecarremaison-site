@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Carré Maison — Votre terrain vous rapporte</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:#f5f2eb;color:#1a1a1a;cursor:none;overflow-x:hidden;}
+
+#cursor{position:fixed;width:12px;height:12px;background:#3d8a4f;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .3s,height .3s,background .3s;}
+#cursor-ring{position:fixed;width:40px;height:40px;border:1px solid #3d8a4f;border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,opacity .3s,border-color .3s;opacity:.5;}
+#cursor.big{width:60px;height:60px;background:rgba(61,138,79,.15);}
+#cursor-ring.big{width:80px;height:80px;opacity:.2;}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:24px 60px;display:flex;justify-content:space-between;align-items:center;}
+.nav-brand{font-size:13px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#1a1a1a;transition:color .4s;}
+.nav-carre{color:#3d8a4f;transition:color .4s;}
+.nav-cta{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#3d8a4f;border-bottom:1px solid #3d8a4f;padding-bottom:1px;cursor:none;text-decoration:none;transition:color .4s,border-color .4s;}
+.nav-cta-h{transition:color .4s;}
+/* fond noir */
+.nav.on-dark .nav-brand{color:#f5f2eb;}
+.nav.on-dark .nav-carre{color:#3d8a4f;}
+.nav.on-dark .nav-cta{color:#f5f2eb;border-bottom-color:#3d8a4f;}
+.nav.on-dark .nav-cta-h{color:#3d8a4f;}
+/* fond vert */
+.nav.on-green .nav-brand{color:#1a1a1a;}
+.nav.on-green .nav-carre{color:#fff;}
+.nav.on-green .nav-cta{color:#fff;border-bottom-color:rgba(255,255,255,.5);}
+.nav.on-green .nav-cta-h{color:#1a1a1a;}
+
+.panel{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:120px 60px 80px;position:relative;}
+.p-cream{background:#f5f2eb;color:#1a1a1a;}
+.p-dark{background:#1a1a1a;color:#f5f2eb;}
+.p-green{background:#2a5e38;color:#f5f2eb;}
+
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#3d8a4f;margin-bottom:28px;overflow:hidden;}
+.eyebrow span{display:inline-block;transform:translateY(100%);transition:transform .7s ease;}
+.eyebrow.visible span{transform:translateY(0);}
+.p-green .eyebrow{color:#a8d5b5;}
+.p-dark .eyebrow{color:#3d8a4f;}
+
+.big-title{font-size:clamp(48px,8vw,100px);font-weight:900;line-height:.92;letter-spacing:-.03em;margin-bottom:40px;}
+.big-title .word{overflow:hidden;display:block;padding-bottom:.15em;margin-bottom:-.15em;}
+.big-title .word span{display:block;transform:translateY(110%);transition:transform .8s cubic-bezier(.16,1,.3,1);}
+.big-title.visible .word span{transform:translateY(0);}
+.big-title .word:nth-child(2) span{transition-delay:.1s;}
+.big-title .word:nth-child(3) span{transition-delay:.2s;}
+.big-title .word:nth-child(4) span{transition-delay:.3s;}
+.g{color:#3d8a4f;}
+.p-green .g,.p-dark .g{color:#a8d5b5;}
+
+.sub{font-size:17px;font-weight:300;line-height:1.6;max-width:480px;}
+
+.pill-btn{display:inline-flex;align-items:center;gap:10px;margin-top:44px;background:#3d8a4f;color:#fff;font-size:14px;font-weight:700;padding:16px 32px;border-radius:60px;border:none;cursor:none;letter-spacing:.04em;transition:transform .2s,background .2s;text-decoration:none;}
+.pill-btn:hover{background:#2f6e3e;transform:scale(1.04);}
+.pill-btn-o{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;}
+.pill-btn-o:hover{background:rgba(255,255,255,.08);}
+
+.badge-circle{position:absolute;right:80px;top:50%;transform:translateY(-50%);width:220px;height:220px;border-radius:50%;border:1px solid rgba(61,138,79,.3);background:rgba(61,138,79,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;animation:spin 20s linear infinite;}
+.badge-circle .bn{font-size:56px;font-weight:900;color:#3d8a4f;line-height:1;}
+.badge-circle .bl{font-size:13px;color:#666;margin-top:8px;line-height:1.4;}
+
+.line-sep{height:1px;background:currentColor;opacity:.12;margin:0 60px;width:0;transition:width 1.4s ease;}
+.line-sep.visible{width:calc(100% - 120px);}
+
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid rgba(255,255,255,.1);}
+.stat-c{padding:52px 40px;border-right:1px solid rgba(255,255,255,.1);cursor:default;}
+.stat-c:last-child{border-right:none;}
+.stat-big{font-size:64px;font-weight:900;line-height:1;letter-spacing:-.04em;color:#3d8a4f;display:inline-block;transition:transform .5s cubic-bezier(.34,1.56,.64,1);}
+.stat-c:hover .stat-big{transform:scale(1.18);}
+.stat-lbl{font-size:12px;color:rgba(255,255,255,.5);margin-top:8px;line-height:1.5;letter-spacing:.04em;}
+
+.cards-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(42,94,56,.5);margin-top:52px;border:1px solid rgba(42,94,56,.4);border-radius:12px;overflow:visible;}
+.ccard{background:#a8d5b5;padding:36px 28px;transition:transform .5s cubic-bezier(.16,1,.3,1),box-shadow .5s;position:relative;overflow:hidden;z-index:0;}
+.ccard:first-child{border-radius:12px 0 0 12px;}
+.ccard:last-child{border-radius:0 12px 12px 0;}
+.ccard::before{content:'';position:absolute;top:0;left:-130%;width:75%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.13),transparent);transform:skewX(-15deg);transition:left .65s ease;pointer-events:none;z-index:1;}
+.ccard:hover::before{left:160%;}
+.ccard:hover{transform:translateY(-14px) scale(1.02);box-shadow:0 40px 80px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.15);z-index:10;}
+.ccard-n{font-size:11px;font-weight:700;letter-spacing:.12em;color:rgba(42,94,56,.5);margin-bottom:20px;}
+.ccard-ico{margin-bottom:20px;line-height:0;}
+.ccard-t{font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:8px;}
+.ccard-b{font-size:13px;color:rgba(26,26,26,.7);line-height:1.6;}
+
+.steps-wrap{margin-top:52px;max-width:700px;}
+.srow{display:flex;gap:28px;padding:28px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+.srow:last-child{border-bottom:none;}
+.snum{font-size:11px;font-weight:700;color:#a8d5b5;min-width:28px;padding-top:3px;letter-spacing:.08em;}
+.st{font-size:17px;font-weight:700;color:#fff;margin-bottom:4px;}
+.sd{font-size:13px;color:rgba(255,255,255,.55);line-height:1.5;}
+
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .9s ease,transform .9s ease;}
+.reveal.visible{opacity:1;transform:none;}
+.reveal-d1{transition-delay:.15s;}
+.reveal-d2{transition-delay:.3s;}
+.reveal-d3{transition-delay:.45s;}
+
+.footer{padding:40px 60px;display:flex;flex-direction:column;gap:0;border-top:1px solid #e0e0e0;background:#f5f2eb;}
+.footer-top{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.footer-legal{width:100%;border-top:1px solid #e8e4dc;padding-top:18px;font-size:10.5px;color:#aaa;line-height:1.9;letter-spacing:.01em;}
+.footer-legal strong{color:#999;font-weight:600;}
+.footer-copy{font-size:10.5px;color:#bbb;margin-top:10px;}
+.fb{font-size:13px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;}
+.fn{font-size:12px;color:#999;}
+
+.cta-split{display:flex;align-items:center;gap:52px;margin-top:52px;width:100%;max-width:720px;}
+.cta-split-l,.cta-split-r{flex:1;display:flex;justify-content:center;}
+.cta-div{display:flex;flex-direction:column;align-items:center;gap:12px;flex-shrink:0;}
+.cta-div-line{width:1px;height:70px;background:rgba(255,255,255,.2);}
+.cta-div-ou{font-size:10px;font-weight:700;letter-spacing:.2em;color:rgba(255,255,255,.35);text-transform:uppercase;}
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.qr-box{width:130px;height:130px;background:white;border-radius:12px;position:relative;flex-shrink:0;}
+.qr-corner{position:absolute;width:28px;height:28px;border:4px solid #1a1a1a;}
+.qr-corner.tl{top:10px;left:10px;}
+.qr-corner.tr{top:10px;right:10px;}
+.qr-corner.bl{bottom:10px;left:10px;}
+.qr-dot{position:absolute;background:#1a1a1a;border-radius:1px;}
+.qr-url{font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.45);text-transform:uppercase;}
+.qr-label{font-size:12px;color:rgba(255,255,255,.65);letter-spacing:.04em;}
+
+@keyframes spin{to{transform:translateY(-50%) rotate(360deg);}}
+
+@media(max-width:768px){
+  .panel{padding:100px 28px 60px;}
+  .nav{padding:20px 28px;}
+  .badge-circle{display:none;}
+  .cards-wrap{grid-template-columns:1fr;}
+  .ccard:first-child{border-radius:12px 12px 0 0;}
+  .ccard:last-child{border-radius:0 0 12px 12px;}
+  .stat-row{grid-template-columns:1fr;}
+  .stat-c{border-right:none;border-bottom:1px solid rgba(255,255,255,.1);padding:32px 28px;}
+  .line-sep{margin:0 28px;}
+  .footer{padding:24px 28px;}
+  .footer-top{flex-direction:column;gap:8px;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<nav class="nav">
+  <div class="nav-brand">Le <span class="nav-carre">Carré</span> Maison</div>
+  <a href="/mon-terrain/" class="nav-cta">Vérifier mon <span class="nav-cta-h">terrain</span></a>
+</nav>
+
+<!-- HERO -->
+<section class="panel p-cream" id="p0">
+  <h1 class="big-title">
+    <div class="word"><span>Votre terrain</span></div>
+    <div class="word"><span>en <em class="g" style="font-style:normal;">argent net.</em></span></div>
+    <div class="word"><span>Sans payer</span></div>
+    <div class="word"><span>un centime.</span></div>
+  </h1>
+  <p class="sub reveal">Vous avez un terrain qui dort ? On le transforme en argent. Zéro frais, zéro démarche, zéro paperasse.</p>
+  <a href="/mon-terrain/" class="pill-btn reveal reveal-d1">Vérifier mon terrain →</a>
+  <div class="badge-circle">
+    <div class="bn">100%</div>
+    <div class="bl">pris en<br>charge</div>
+  </div>
+</section>
+
+<div class="line-sep" style="color:#1a1a1a;"></div>
+
+<!-- STATS -->
+<section class="panel p-dark" id="p1" style="min-height:auto;padding:0;">
+  <div class="stat-row">
+    <div class="stat-c reveal"><div class="stat-big" id="st1">0€</div><div class="stat-lbl">Frais pour le propriétaire</div></div>
+    <div class="stat-c reveal reveal-d1"><div class="stat-big" id="st2">0%</div><div class="stat-lbl">Taux de dossiers aboutis</div></div>
+    <div class="stat-c reveal reveal-d2"><div class="stat-big" id="st3">0%</div><div class="stat-lbl">Pris en charge</div></div>
+  </div>
+</section>
+
+<div class="line-sep" style="color:#f5f2eb;background:rgba(255,255,255,.15);"></div>
+
+<!-- CONCEPT -->
+<section class="panel p-green" id="p2">
+  <div class="eyebrow"><span>Le concept</span></div>
+  <h2 class="big-title" style="font-size:clamp(36px,5vw,68px);max-width:700px;">
+    <div class="word"><span>Votre terrain</span></div>
+    <div class="word"><span>a de la valeur.</span></div>
+    <div class="word"><span><em class="g" style="font-style:normal;">On la libère.</em></span></div>
+  </h2>
+  <div class="cards-wrap">
+    <div class="ccard reveal"><div class="ccard-n">01</div><div class="ccard-ico"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><polygon points="18,4 32,14 26,32 10,32 4,14" stroke="rgba(42,94,56,.7)" stroke-width="1.5" stroke-linejoin="round"/><polyline points="4,14 18,21 32,14" stroke="rgba(42,94,56,.7)" stroke-width="1.5" stroke-linejoin="round"/><line x1="18" y1="4" x2="18" y2="21" stroke="rgba(42,94,56,.3)" stroke-width="1"/><line x1="18" y1="21" x2="26" y2="32" stroke="rgba(42,94,56,.3)" stroke-width="1"/><line x1="18" y1="21" x2="10" y2="32" stroke="rgba(42,94,56,.3)" stroke-width="1"/></svg></div><div class="ccard-t">Une valeur cachée</div><div class="ccard-b">Votre terrain a un prix de marché réel, même une partie inutilisée depuis des années. Le Carré Maison l'identifie pour vous.</div></div>
+    <div class="ccard reveal reveal-d1"><div class="ccard-n">02</div><div class="ccard-ico"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="13" stroke="rgba(42,94,56,.7)" stroke-width="1.5"/><polyline points="11,18 16,23 25,13" stroke="rgba(42,94,56,.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ccard-t">Zéro démarche pour vous</div><div class="ccard-b">Analyse, démarches administratives, suivi de dossier. On gère tout de A à Z. Vous ne faites rien. Vraiment rien.</div></div>
+    <div class="ccard reveal reveal-d2"><div class="ccard-n">03</div><div class="ccard-ico"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><polyline points="6,28 14,20 20,24 30,10" stroke="rgba(42,94,56,.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="24,10 30,10 30,16" stroke="rgba(42,94,56,.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ccard-t">Vous encaissez, net</div><div class="ccard-b">Le prix de votre terrain vous revient intégralement. Aucune commission prélevée. Aucune surprise.</div></div>
+  </div>
+</section>
+
+<div class="line-sep" style="color:#f5f2eb;background:rgba(255,255,255,.15);"></div>
+
+<!-- ÉTAPES -->
+<section class="panel p-dark" id="p3">
+  <div class="eyebrow"><span>Comment ça se passe</span></div>
+  <h2 class="big-title" style="font-size:clamp(36px,5vw,68px);">
+    <div class="word"><span>En 4 étapes.</span></div>
+    <div class="word"><span>Vous n'avez</span></div>
+    <div class="word"><span><em class="g" style="font-style:normal;color:#a8d5b5;">rien à faire.</em></span></div>
+  </h2>
+  <div class="steps-wrap">
+    <div class="srow reveal"><div class="snum">01</div><div><div class="st">Vous nous contactez</div><div class="sd">Deux minutes, un formulaire. Adresse, superficie. C'est tout.</div></div></div>
+    <div class="srow reveal reveal-d1"><div class="snum">02</div><div><div class="st">On vérifie la faisabilité</div><div class="sd">On consulte le PLU en ligne, sans vous déranger, sans déplacement.</div></div></div>
+    <div class="srow reveal reveal-d2"><div class="snum">03</div><div><div class="st">Le Carré Maison se charge de tout</div><div class="sd">Analyse, démarches administratives, coordination. On gère l'intégralité du dossier à votre place.</div></div></div>
+    <div class="srow reveal reveal-d3"><div class="snum">04</div><div><div class="st">Vous encaissez.</div><div class="sd">Prix net. Zéro commission. Sans payer un centime.</div></div></div>
+  </div>
+</section>
+
+<div class="line-sep" style="color:#f5f2eb;background:rgba(255,255,255,.15);"></div>
+
+<!-- CTA -->
+<section class="panel p-green" id="contact" style="align-items:center;text-align:center;">
+  <div class="eyebrow" style="justify-content:center;display:flex;"><span>Prêt ?</span></div>
+  <h2 class="big-title" style="font-size:clamp(36px,5vw,72px);text-align:center;">
+    <div class="word"><span>Vérifiez votre</span></div>
+    <div class="word"><span>terrain en</span></div>
+    <div class="word"><span><em class="g" style="font-style:normal;">2 minutes.</em></span></div>
+  </h2>
+  <div class="cta-split reveal">
+    <div class="cta-split-l">
+      <a href="/mon-terrain/" class="pill-btn pill-btn-o">Vérifier mon terrain →</a>
+    </div>
+    <div class="cta-div">
+      <div class="cta-div-line"></div>
+      <span class="cta-div-ou">OU</span>
+      <div class="cta-div-line"></div>
+    </div>
+    <div class="cta-split-r">
+      <div class="qr-wrap">
+        <div class="qr-box">
+          <div class="qr-corner tl"></div>
+          <div class="qr-corner tr"></div>
+          <div class="qr-corner bl"></div>
+          <div class="qr-dot" style="width:10px;height:10px;top:18px;left:18px;"></div>
+          <div class="qr-dot" style="width:10px;height:10px;top:18px;right:18px;"></div>
+          <div class="qr-dot" style="width:10px;height:10px;bottom:18px;left:18px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:14px;left:54px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:14px;left:66px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:14px;left:78px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:26px;left:60px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:38px;left:50px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:38px;left:70px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:38px;left:84px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:50px;left:14px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:50px;left:28px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:50px;left:56px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:50px;left:74px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:62px;left:42px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:62px;left:62px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:62px;left:80px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:74px;left:50px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:74px;left:66px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:86px;left:56px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:86px;left:72px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:86px;left:84px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:98px;left:60px;"></div>
+          <div class="qr-dot" style="width:5px;height:5px;top:98px;left:78px;"></div>
+        </div>
+        <div class="qr-label">Scannez pour vérifier votre terrain</div>
+        <div class="qr-url">lecarremaison.fr/mon-terrain</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-top">
+    <div class="fb">Le <span style="color:#3d8a4f;">Carré</span> Maison</div>
+    <div class="fn">terrain@lecarremaison.fr</div>
+  </div>
+  <div class="footer-copy">© <span id="yr"></span> LCM. Tous droits réservés.</div>
+</footer>
+
+<script>
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  cur.style.left=mx+'px'; cur.style.top=my+'px';
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const cc=(el&&el.closest&&el.closest('.p-green'))?'#f5f2eb':'#3d8a4f';
+  cur.style.background=cc;
+  ring.style.borderColor=cc;
+});
+(function animRing(){
+  rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+})();
+
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.classList.add('big');ring.classList.add('big');});
+  el.addEventListener('mouseleave',()=>{cur.classList.remove('big');ring.classList.remove('big');});
+});
+
+const nav = document.querySelector('.nav');
+function updateNav(){
+  const h = nav.offsetHeight;
+  let onDark = false, onGreen = false;
+  document.querySelectorAll('.p-dark').forEach(s=>{
+    const r = s.getBoundingClientRect();
+    if(r.top < h && r.bottom > 0) onDark = true;
+  });
+  document.querySelectorAll('.p-green').forEach(s=>{
+    const r = s.getBoundingClientRect();
+    if(r.top < h && r.bottom > 0) onGreen = true;
+  });
+  nav.classList.toggle('on-dark', onDark);
+  nav.classList.toggle('on-green', onGreen);
+}
+window.addEventListener('scroll', updateNav, {passive:true});
+updateNav();
+
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+    }
+  });
+},{threshold:.15});
+
+document.querySelectorAll('.reveal,.eyebrow,.big-title,.line-sep').forEach(el=>io.observe(el));
+
+function countUp(el,target,prefix,suffix,dur){
+  let start=null;
+  (function step(ts){
+    if(!start) start=ts;
+    const p=Math.min((ts-start)/dur,1);
+    const ease=1-Math.pow(1-p,3);
+    el.textContent=(prefix||'')+Math.round(ease*target)+(suffix||'');
+    if(p<1) requestAnimationFrame(step);
+  })(performance.now());
+}
+
+const statIo = new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting){
+    statIo.disconnect();
+    countUp(document.getElementById('st1'),0,'','€',800);
+    countUp(document.getElementById('st2'),70,'','%',1200);
+    countUp(document.getElementById('st3'),100,'','%',1600);
+  }
+},{threshold:.4});
+statIo.observe(document.getElementById('p1'));
+
+let audioCtx;
+function _ac(){return audioCtx||(audioCtx=new(window.AudioContext||window.webkitAudioContext)());}
+function sfxClick(){
+  const c=_ac(),t=c.currentTime;
+  const buf=c.createBuffer(1,Math.floor(c.sampleRate*.025),c.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*.12));
+  const src=c.createBufferSource(),g=c.createGain();
+  src.buffer=buf;src.connect(g);g.connect(c.destination);
+  g.gain.setValueAtTime(.38,t);src.start(t);
+  const o=c.createOscillator(),og=c.createGain();
+  o.connect(og);og.connect(c.destination);
+  o.type='sine';o.frequency.value=160;
+  og.gain.setValueAtTime(.09,t);
+  og.gain.exponentialRampToValueAtTime(.001,t+.05);
+  o.start(t);o.stop(t+.06);
+}
+function sfxStat(){
+  const c=_ac(),o=c.createOscillator(),g=c.createGain();
+  o.connect(g);g.connect(c.destination);
+  o.type='sine';const t=c.currentTime;
+  o.frequency.setValueAtTime(180,t);
+  o.frequency.exponentialRampToValueAtTime(680,t+.22);
+  g.gain.setValueAtTime(.1,t);
+  g.gain.exponentialRampToValueAtTime(.001,t+.28);
+  o.start(t);o.stop(t+.3);
+}
+function sfxCard(){
+  const c=_ac(),o=c.createOscillator(),g=c.createGain();
+  o.connect(g);g.connect(c.destination);
+  o.type='triangle';const t=c.currentTime;
+  o.frequency.setValueAtTime(400,t);
+  o.frequency.exponentialRampToValueAtTime(220,t+.09);
+  g.gain.setValueAtTime(.14,t);
+  g.gain.exponentialRampToValueAtTime(.001,t+.12);
+  o.start(t);o.stop(t+.13);
+}
+document.querySelectorAll('.stat-c').forEach(el=>el.addEventListener('mouseenter',sfxStat));
+document.querySelectorAll('.ccard').forEach(el=>el.addEventListener('mouseenter',sfxCard));
+document.getElementById('yr').textContent=new Date().getFullYear();
+document.querySelectorAll('.nav-cta,.pill-btn').forEach(el=>{
+  el.addEventListener('click',function(e){
+    if(!this.href) return;
+    e.preventDefault();
+    sfxClick();
+    setTimeout(()=>{location.href=this.href;},65);
+  });
+});
+window.addEventListener('pageshow',function(){
+  cur.classList.remove('big');
+  ring.classList.remove('big');
+});
+</script>
+</body>
+</html>

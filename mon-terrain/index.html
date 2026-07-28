@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon Terrain — Le Carré Maison</title>
+  <meta name="description" content="Découvrez ce que vaut vraiment votre terrain en Charente-Maritime.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:       #1E8A4A;
+      --green-light: #2EA55D;
+      --green-dark:  #145F33;
+      --black:       #111111;
+      --grey-dark:   #333333;
+      --grey:        #666666;
+      --white:       #FFFFFF;
+      --yellow:      #F9D71C;
+      --orange:      #D97706;
+      --bg:          #F7F8F6;
+      --radius:      10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--black);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--white);
+      border-bottom: 3px solid var(--green);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-box {
+      width: 46px; height: 46px;
+      background: var(--green);
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-box span {
+      color: white; font-size: 9px; font-weight: 900; letter-spacing: 0.5px;
+      text-align: center; line-height: 1.2;
+    }
+    .logo-text { display: flex; flex-direction: column; gap: 0; }
+    .logo-text .le     { font-size: 10px; font-weight: 700; color: var(--black); letter-spacing: 1px; }
+    .logo-text .carre  { font-size: 16px; font-weight: 900; color: var(--green); letter-spacing: 1px; line-height: 1; }
+    .logo-text .maison { font-size: 10px; font-weight: 700; color: var(--black); letter-spacing: 1px; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(145deg, var(--green-dark) 0%, var(--green) 100%);
+      padding: 36px 24px 40px;
+      text-align: center; color: white;
+    }
+    .hero h1 {
+      font-size: 28px; font-weight: 900; line-height: 1.2; margin-bottom: 12px;
+    }
+    .hero h1 em { color: var(--yellow); font-style: normal; }
+    .hero p {
+      font-size: 15px; opacity: 0.88; line-height: 1.6;
+      max-width: 400px; margin: 0 auto;
+    }
+
+    /* ── FORM ── */
+    .form-wrap {
+      max-width: 560px; margin: 0 auto;
+      padding: 24px 20px 0;
+    }
+    .tabs {
+      display: flex; gap: 8px; margin-bottom: 20px;
+    }
+    .tab-btn {
+      flex: 1; padding: 10px 6px;
+      border: 2px solid #ddd; border-radius: var(--radius);
+      background: white; font-size: 13px; font-weight: 600;
+      color: var(--grey); cursor: pointer; transition: all .2s;
+    }
+    .tab-btn.active {
+      border-color: var(--green); color: var(--green); background: #F0FFF7;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .field { margin-bottom: 16px; position: relative; }
+    .field label { display: block; font-size: 13px; font-weight: 600; color: var(--grey-dark); margin-bottom: 6px; }
+    .field input {
+      width: 100%; padding: 14px 16px;
+      border: 2px solid #ddd; border-radius: var(--radius);
+      font-size: 16px; color: var(--black); background: white;
+      outline: none; transition: border-color .2s;
+      -webkit-appearance: none;
+    }
+    .field input:focus { border-color: var(--green); }
+    .field .hint { font-size: 12px; color: var(--grey); margin-top: 5px; }
+
+    /* suggestions autocomplete */
+    .autocomplete-list {
+      position: absolute; top: calc(100% - 2px); left: 0; right: 0;
+      background: white;
+      border: 2px solid var(--green); border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      max-height: 220px; overflow-y: auto;
+      z-index: 200; display: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    }
+    .autocomplete-item {
+      padding: 12px 16px; font-size: 14px; cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: #F0FFF7; }
+
+    .btn-go {
+      width: 100%; padding: 16px;
+      background: var(--green); color: white;
+      border: none; border-radius: var(--radius);
+      font-size: 17px; font-weight: 800;
+      cursor: pointer; transition: background .2s;
+      margin-bottom: 24px;
+    }
+    .btn-go:hover { background: var(--green-dark); }
+    .btn-go:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* ── LOADING ── */
+    .loading {
+      display: none; text-align: center;
+      padding: 32px 20px; max-width: 560px; margin: 0 auto;
+    }
+    .spinner {
+      width: 42px; height: 42px;
+      border: 4px solid #e0e0e0; border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin .75s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { font-size: 14px; color: var(--grey); }
+
+    /* ── ERROR ── */
+    .error-box {
+      display: none;
+      max-width: 560px; margin: 0 auto 16px;
+      padding: 14px 18px;
+      background: #FEE2E2; border-radius: var(--radius);
+      color: #991B1B; font-size: 14px;
+    }
+
+    /* ── RESULTS ── */
+    .results {
+      display: none;
+      max-width: 560px; margin: 0 auto;
+      padding: 4px 20px 48px;
+    }
+
+    .zone-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border-radius: 99px;
+      font-size: 14px; font-weight: 700;
+      margin-bottom: 18px;
+    }
+    .zone-ok  { background: #D4F5E4; color: #145F33; }
+    .zone-ko  { background: #FDE8CC; color: #7C3A00; }
+    .zone-unk { background: #E5E7EB; color: #374151; }
+
+    .cards {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin-bottom: 18px;
+    }
+    .card {
+      background: white; border-radius: var(--radius);
+      padding: 16px 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      border: 1px solid #E5E7EB;
+    }
+    .card-label { font-size: 11px; font-weight: 700; color: var(--grey); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+    .card-value { font-size: 24px; font-weight: 900; line-height: 1.1; }
+    .card-sub   { font-size: 11px; color: var(--grey); margin-top: 2px; }
+    .card.green .card-value { color: var(--green); }
+    .card.orange .card-value { color: var(--orange); }
+
+    /* message accrocheur */
+    .msg-box {
+      background: linear-gradient(135deg, var(--green-dark), var(--green));
+      border-radius: var(--radius); padding: 24px 20px;
+      color: white; text-align: center; margin-bottom: 18px;
+    }
+    .msg-box h2 { font-size: 20px; font-weight: 900; line-height: 1.3; margin-bottom: 8px; }
+    .msg-box p  { font-size: 14px; opacity: .9; line-height: 1.65; margin-bottom: 8px; }
+    .msg-sub    { font-size: 15px; font-weight: 700; opacity: 1 !important; margin-bottom: 16px !important; }
+    .pct-block  { background: rgba(0,0,0,.18); border-radius: 10px; padding: 16px 20px; margin-top: 4px; }
+    .pct-label  { font-size: 14px; font-weight: 700; opacity: .9; margin-bottom: 4px; }
+    .pct-num    { font-size: 64px; font-weight: 900; line-height: 1; color: white; margin-bottom: 12px; }
+    .pct-num span { font-size: 36px; }
+    .pct-list   { list-style: none; text-align: left; display: inline-block; }
+    .pct-list li { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+
+    /* CTA */
+    .cta-link {
+      display: block; width: 100%;
+      padding: 18px 16px;
+      background: var(--yellow); color: var(--black);
+      border-radius: var(--radius);
+      font-size: 17px; font-weight: 900;
+      text-align: center; text-decoration: none;
+      box-shadow: 0 4px 14px rgba(0,0,0,.15);
+      transition: transform .12s, box-shadow .12s;
+      margin-bottom: 10px;
+    }
+    .cta-link:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+    .cta-note { font-size: 12px; color: var(--grey); text-align: center; }
+
+    /* ── CHECKLIST ANIMÉE ── */
+    .check-item {
+      display: flex; align-items: center; gap: 14px;
+      background: white; border-radius: 12px;
+      border: 1px solid #E5E7EB; padding: 14px 18px;
+      margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+      font-size: 15px;
+    }
+    .chk-left {
+      width: 24px; height: 24px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .chk-spinner {
+      width: 20px; height: 20px;
+      border: 2px solid #E5E7EB; border-top-color: #1E8A4A;
+      border-radius: 50%; animation: spin .75s linear infinite;
+    }
+    .chk-txt { flex: 1; font-weight: 600; line-height: 1.4; }
+
+    /* ── BOÎTE m² ── */
+    .m2-box {
+      background: white; border-radius: 12px;
+      border: 2px solid #F9D71C; padding: 20px;
+      margin-bottom: 16px; text-align: center;
+    }
+    .m2-box p { font-size: 15px; font-weight: 700; color: #333; margin-bottom: 14px; }
+    .m2-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .m2-row input {
+      border: 2px solid #1E8A4A; border-radius: 8px;
+      padding: 12px 16px; font-size: 22px; font-weight: 900;
+      width: 130px; text-align: center; outline: none; color: #111;
+    }
+    .m2-row span { font-size: 18px; font-weight: 700; color: #555; }
+
+    /* ── ZONE BROUILLÉE ── */
+    .blur-zone { position: relative; margin-bottom: 20px; border-radius: 12px; overflow: hidden; }
+    .blur-inner { filter: blur(6px); pointer-events: none; user-select: none; }
+    .blur-lock {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.15);
+    }
+    .blur-lock-label {
+      background: rgba(0,0,0,0.72); color: white;
+      padding: 10px 20px; border-radius: 10px;
+      font-size: 14px; font-weight: 800; text-align: center;
+      backdrop-filter: blur(2px); line-height: 1.5;
+    }
+
+    /* ── FORMULAIRE LEAD ── */
+    .lead-form {
+      background: white; border-radius: 14px;
+      border: 2px solid #E5E7EB; padding: 24px 20px;
+      margin-bottom: 16px;
+    }
+    .lead-form h3 { font-size: 17px; font-weight: 900; color: #111; text-align: center; margin-bottom: 4px; }
+    .lead-form .lead-sub { font-size: 13px; color: #888; text-align: center; margin-bottom: 20px; }
+    .lead-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .lead-inp {
+      width: 100%; box-sizing: border-box;
+      border: 1.5px solid #E5E7EB; border-radius: 8px;
+      padding: 12px 14px; font-size: 15px; outline: none;
+      transition: border-color .15s;
+    }
+    .lead-inp:focus { border-color: #1E8A4A; }
+    .lead-inp.err   { border-color: #EF4444; background: #FEF2F2; }
+    .lead-err {
+      display: none; background: #FEE2E2; color: #991B1B;
+      padding: 10px 14px; border-radius: 8px;
+      font-size: 13px; margin-bottom: 12px;
+    }
+    .lead-btn {
+      width: 100%; background: #F9D71C; color: #111;
+      font-weight: 900; padding: 16px; border: none;
+      border-radius: 10px; cursor: pointer; font-size: 16px;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .lead-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+
+    /* ── FICHE ANALYSE ── */
+    .fiche-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 16px; border-bottom: 1px solid #F3F4F6; font-size: 13px;
+    }
+    .fiche-lbl { color: #888; }
+    .fiche-val { font-weight: 700; color: #111; text-align: right; }
+
+    /* disclaimer DVF */
+    .disclaimer {
+      font-size: 11px; color: #999; text-align: center;
+      margin-top: 14px; line-height: 1.5;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      padding: 20px; text-align: center;
+      border-top: 1px solid #E5E7EB; background: white;
+    }
+    .footer p { font-size: 11px; color: var(--grey); line-height: 1.6; }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+<!-- META PIXEL -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window,document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','1780617916438410');
+fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1780617916438410&ev=PageView&noscript=1"/></noscript>
+
+<!-- HEADER -->
+<header class="header">
+  <img src="data:image/png;base64,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" alt="Le Carré Maison" width="60" height="60" style="border-radius:50%;flex-shrink:0;">
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Et si votre terrain<br>valait <em>bien plus</em> que ça ?</h1>
+  <p>Entrez votre adresse ou référence cadastrale — obtenez une analyse gratuite en quelques secondes.</p>
+</div>
+
+<!-- FORMULAIRE -->
+<div class="form-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('adresse')">Par adresse</button>
+    <button class="tab-btn" onclick="switchTab('cadastre')">Par référence cadastrale</button>
+  </div>
+
+  <!-- Onglet adresse -->
+  <div id="tab-adresse" class="tab-panel active">
+    <div class="field" id="field-adresse">
+      <label for="inp-adresse">Adresse de votre terrain</label>
+      <input type="text" id="inp-adresse" placeholder="Ex : 12 chemin des Sablons, Marsilly" autocomplete="off">
+      <div class="autocomplete-list" id="autocomplete"></div>
+      <p class="hint">Charente-Maritime, Vendée, Deux-Sèvres</p>
+    </div>
+  </div>
+
+  <!-- Onglet référence cadastrale -->
+  <div id="tab-cadastre" class="tab-panel">
+    <div class="field">
+      <label for="inp-ref">Référence cadastrale</label>
+      <input type="text" id="inp-ref" placeholder="Ex : 17222 ZM 2377">
+      <p class="hint">Commune + section + numéro · Trouvable sur <strong>cadastre.gouv.fr</strong></p>
+    </div>
+  </div>
+
+  <button class="btn-go" id="btn-analyser" onclick="lancer()">Analyser mon terrain →</button>
+</div>
+
+<!-- ENCART 100% — toujours visible sur la homepage -->
+<div class="msg-box" style="max-width:560px;margin:24px auto 0;padding:24px 20px 20px;border-radius:14px;">
+  <h2>Votre terrain peut vous rapporter de l'argent</h2>
+  <p class="msg-sub">Le CARRÉ Maison se charge de tout.</p>
+  <div class="pct-block">
+    <div class="pct-label">Et vous ? Vous encaissez</div>
+    <div class="pct-num">100<span>%</span></div>
+    <ul class="pct-list">
+      <li>✓ Sans frais</li>
+      <li>✓ Sans paperasse</li>
+      <li>✓ Sans démarches</li>
+    </ul>
+  </div>
+</div>
+
+<!-- CHARGEMENT -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p id="loading-msg">Analyse en cours…</p>
+</div>
+
+<!-- ERREUR -->
+<div class="error-box" id="error-box"></div>
+
+<!-- VALIDATION CARTE -->
+<div id="map-validation" style="display:none;max-width:560px;margin:0 auto;padding:0 20px 24px;">
+  <p style="font-size:14px;font-weight:700;color:#333;margin-bottom:5px;">Vérifiez que c'est bien votre terrain</p>
+  <p style="font-size:13px;color:#666;margin-bottom:10px;">La parcelle surlignée en jaune est celle détectée. Cliquez sur une autre si ce n'est pas la vôtre.</p>
+  <div id="leaflet-map" style="height:320px;border-radius:10px 10px 0 0;overflow:hidden;border:1px solid #ddd;border-bottom:none;"></div>
+  <div style="background:white;border:1px solid #ddd;border-radius:0 0 10px 10px;padding:12px 14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;">Terrain sélectionné</div>
+        <div id="map-parcel-label" style="font-size:16px;font-weight:800;color:#1E8A4A;margin-top:2px;">—</div>
+      </div>
+      <button onclick="validerParcelleMap()" style="background:#F9D71C;color:#111;font-weight:800;padding:11px 22px;border:none;border-radius:8px;cursor:pointer;font-size:14px;white-space:nowrap;">
+        ✓ C'est mon terrain →
+      </button>
+    </div>
+  </div>
+  <button onclick="useRefCadastrale()" style="display:block;width:100%;margin-top:8px;background:none;border:none;color:#888;font-size:12px;cursor:pointer;text-decoration:underline;text-align:center;padding:4px;">
+    Ma parcelle n'est pas sur la carte → entrer la référence cadastrale
+  </button>
+</div>
+
+<!-- RÉSULTATS -->
+<div class="results" id="results">
+
+  <!-- Checklist animée step-by-step -->
+  <div id="checklist"></div>
+
+  <!-- Question m² (standalone, avec bouton valider) -->
+  <div class="m2-box" id="div-m2" style="display:none;">
+    <p>Quelle surface souhaitez-vous diviser ?</p>
+    <div class="m2-row">
+      <input type="number" id="inp-m2" min="50" max="10000" placeholder="ex : 300">
+      <span>m²</span>
+    </div>
+    <button onclick="validerM2()" style="margin-top:14px;width:100%;background:#1E8A4A;color:white;font-weight:800;padding:13px 16px;border:none;border-radius:8px;cursor:pointer;font-size:15px;">
+      Calculer mon analyse →
+    </button>
+  </div>
+
+  <!-- Banner "analyse prête" -->
+  <div id="ready-banner" style="display:none; text-align:center; padding:18px 0 12px;">
+    <div style="font-size:30px; margin-bottom:8px;">🎯</div>
+    <h3 style="font-size:18px; font-weight:900; color:#111; margin-bottom:4px;">Votre analyse est prête !</h3>
+    <p style="font-size:14px; color:#666; margin-bottom:0;">Débloquez votre rapport complet — c'est gratuit.</p>
+  </div>
+
+  <!-- Zone brouillée (aperçu verrouillé) -->
+  <div class="blur-zone" id="blurred-zone" style="display:none;">
+    <div class="blur-inner">
+      <div class="cards">
+        <div class="card green">
+          <div class="card-label">Surface divisible</div>
+          <div class="card-value" style="font-size:22px; letter-spacing:2px;">███ m²</div>
+          <div class="card-sub">estimation</div>
+        </div>
+        <div class="card green">
+          <div class="card-label">Valeur terrain</div>
+          <div class="card-value" style="font-size:22px; letter-spacing:2px;">██ ███ €</div>
+          <div class="card-sub">transactions récentes</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Zone PLU</div>
+          <div class="card-value" style="font-size:22px;">█</div>
+          <div class="card-sub">████████████</div>
+        </div>
+        <div class="card orange">
+          <div class="card-label">TFPNB / an</div>
+          <div class="card-value" style="font-size:22px; letter-spacing:2px;">███ €</div>
+          <div class="card-sub">terrain nu estimé</div>
+        </div>
+      </div>
+    </div>
+    <!-- fondu en bas pour masquer la limite -->
+    <div style="position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(to top,#F3F4F6,transparent);pointer-events:none;"></div>
+    <div class="blur-lock">
+      <div class="blur-lock-label">🔒 Renseignez vos coordonnées<br>pour débloquer votre analyse</div>
+    </div>
+  </div>
+
+  <!-- Formulaire de capture -->
+  <div class="lead-form" id="lead-form" style="display:none;">
+    <h3>Où envoyer votre analyse ?</h3>
+    <p class="lead-sub">Gratuit · Sans engagement · Réponse sous 24h</p>
+
+    <div class="lead-row">
+      <input class="lead-inp" id="lead-prenom" type="text"
+        placeholder="Prénom" autocomplete="given-name">
+      <input class="lead-inp" id="lead-nom" type="text"
+        placeholder="Nom" autocomplete="family-name">
+    </div>
+    <input class="lead-inp" id="lead-email" type="email" style="margin-bottom:10px;"
+      placeholder="Email (ex : jean@gmail.com)" autocomplete="email">
+    <input class="lead-inp" id="lead-tel" type="tel" style="margin-bottom:16px;"
+      placeholder="Téléphone" autocomplete="tel">
+
+    <div class="lead-err" id="lead-err"></div>
+
+    <button class="lead-btn" onclick="soumettreFormLead()">
+      Voir mon analyse →
+    </button>
+  </div>
+
+  <!-- FICHE ANALYSE (révélée après soumission) -->
+  <div id="real-results" style="display:none;">
+
+    <!-- En-tête fiche -->
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#aaa;margin-bottom:3px;">Analyse terrain · <span id="fiche-date"></span></div>
+      <div style="font-size:18px;font-weight:900;color:#111;" id="fiche-titre">—</div>
+      <div id="fiche-zone-badge" style="display:inline-block;margin-top:6px;padding:4px 14px;border-radius:99px;font-size:12px;font-weight:700;"></div>
+    </div>
+
+    <!-- Mini-carte satellite -->
+    <div id="fiche-map" style="height:210px;border-radius:12px;overflow:hidden;margin-bottom:12px;border:1px solid #E5E7EB;"></div>
+
+    <!-- Valeur estimée -->
+    <div style="background:linear-gradient(135deg,#145F33,#1E8A4A);border-radius:12px;padding:20px;text-align:center;margin-bottom:10px;color:white;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.8;margin-bottom:6px;">Valeur estimée du terrain</div>
+      <div style="font-size:40px;font-weight:900;line-height:1;" id="fiche-valeur">—</div>
+      <div style="font-size:13px;opacity:.8;margin-top:5px;" id="fiche-prix-m2">—</div>
+    </div>
+
+    <!-- Tableau identité -->
+    <div style="background:white;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;margin-bottom:10px;">
+      <div class="fiche-row"><span class="fiche-lbl">Référence cadastrale</span><span class="fiche-val" id="fiche-ref">—</span></div>
+      <div class="fiche-row"><span class="fiche-lbl">Surface totale</span><span class="fiche-val" id="fiche-surface">—</span></div>
+      <div class="fiche-row" style="border:none;"><span class="fiche-lbl">Zone PLU</span><span class="fiche-val" id="fiche-zone">—</span></div>
+    </div>
+
+    <!-- Simulation division -->
+    <div id="fiche-division" style="display:none;background:white;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;margin-bottom:10px;">
+      <div style="padding:12px 16px 4px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#888;font-weight:700;">Votre projet de division</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+        <div style="padding:10px 16px 14px;border-right:1px solid #F3F4F6;">
+          <div style="font-size:11px;color:#888;margin-bottom:3px;">Part à céder</div>
+          <div style="font-size:20px;font-weight:900;color:#1E8A4A;" id="fiche-m2-ceder">—</div>
+          <div style="font-size:12px;color:#888;font-weight:600;" id="fiche-val-ceder"></div>
+        </div>
+        <div style="padding:10px 16px 14px;">
+          <div style="font-size:11px;color:#888;margin-bottom:3px;">Il vous reste</div>
+          <div style="font-size:20px;font-weight:900;color:#111;" id="fiche-m2-reste">—</div>
+          <div style="font-size:12px;color:#888;font-weight:600;" id="fiche-val-reste"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emprise au sol -->
+    <div id="fiche-plancher" style="display:none;background:white;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;margin-bottom:10px;">
+      <div style="padding:12px 16px 4px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#888;font-weight:700;">Emprise au sol constructible (lot à céder)</div>
+      <div style="padding:10px 16px 14px;">
+        <div style="font-size:11px;color:#888;margin-bottom:3px;">Emprise au sol max</div>
+        <div style="font-size:28px;font-weight:900;color:#111;" id="fiche-emprise">—</div>
+        <div style="font-size:11px;color:#aaa;line-height:1.5;margin-top:6px;" id="fiche-sp-formule"></div>
+      </div>
+    </div>
+
+    <p class="disclaimer">Données cadastrales IGN · Zonage PLU via GPU IGN · Prix DVF (dernières transactions connues) · Estimations indicatives — à vérifier auprès d'un professionnel</p>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>Le Carré Maison · <a href="mailto:terrain@lecarremaison.fr">terrain@lecarremaison.fr</a><br>
+  <small>lecarremaison.fr — Charente-Maritime</small></p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ─────────────────────────────────────────
+//  ÉTAT
+// ─────────────────────────────────────────
+let activeTab = 'adresse';
+let selectedCoords = null;   // [lon, lat]
+let acTimer = null;
+
+// État mini-carte
+let _lMap = null;
+let _ficheMap = null;
+let _ficheData = {};
+let _selectedParcel = null;
+let _layerMap = {};
+
+// ─────────────────────────────────────────
+//  TABS
+// ─────────────────────────────────────────
+function switchTab(t) {
+  activeTab = t;
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && t === 'adresse') || (i === 1 && t === 'cadastre'));
+  });
+  document.getElementById('tab-adresse').classList.toggle('active', t === 'adresse');
+  document.getElementById('tab-cadastre').classList.toggle('active', t === 'cadastre');
+  selectedCoords = null;
+}
+
+// ─────────────────────────────────────────
+//  AUTOCOMPLETE ADRESSE — API BAN
+// ─────────────────────────────────────────
+const inpAdresse = document.getElementById('inp-adresse');
+const acList     = document.getElementById('autocomplete');
+
+inpAdresse.addEventListener('input', () => {
+  clearTimeout(acTimer);
+  const q = inpAdresse.value.trim();
+  if (q.length < 4) { acList.style.display = 'none'; return; }
+  acTimer = setTimeout(() => fetchAC(q), 280);
+});
+
+async function fetchAC(q) {
+  try {
+    const r = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5`);
+    const d = await r.json();
+    renderAC(d.features || []);
+  } catch { acList.style.display = 'none'; }
+}
+
+function renderAC(features) {
+  if (!features.length) { acList.style.display = 'none'; return; }
+  acList._f = features;
+  acList.innerHTML = features.map((f, i) =>
+    `<div class="autocomplete-item" onclick="pickAC(${i})">${f.properties.label}</div>`
+  ).join('');
+  acList.style.display = 'block';
+}
+
+function pickAC(i) {
+  const f = acList._f[i];
+  inpAdresse.value = f.properties.label;
+  selectedCoords   = f.geometry.coordinates;  // [lon, lat]
+  acList.style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#field-adresse')) acList.style.display = 'none';
+});
+
+// ─────────────────────────────────────────
+//  PARSE RÉFÉRENCE CADASTRALE
+// ─────────────────────────────────────────
+function parseRef(raw) {
+  const s = raw.replace(/\s+/g, '').toUpperCase();
+  // ex: 17222ZM2377 | 17222000ZM2377 | 17222ZM0377
+  const m = s.match(/^(\d{5})\d{0,3}([A-Z]{1,2})(\d{3,4})$/);
+  if (!m) return null;
+  return {
+    codeInsee: m[1],
+    section:   m[2],
+    numero:    m[3].padStart(4, '0')
+  };
+}
+
+// ─────────────────────────────────────────
+//  POINT D'ENTRÉE
+// ─────────────────────────────────────────
+async function lancer() {
+  hideError();
+  hideResults();
+  hideMapValidation();
+
+  acList.style.display = 'none';
+
+  if (activeTab === 'adresse') {
+    const q = inpAdresse.value.trim();
+    if (!q) { showError('Veuillez entrer une adresse.'); return; }
+    showLoading('Recherche de l\'adresse…');
+    if (selectedCoords) {
+      await parCoords(selectedCoords[1], selectedCoords[0]);
+    } else {
+      await geocodeEtAnalyse(q);
+    }
+  } else {
+    const raw = document.getElementById('inp-ref').value.trim();
+    if (!raw) { showError('Veuillez entrer une référence cadastrale.'); return; }
+    const ref = parseRef(raw);
+    if (!ref) { showError('Format non reconnu. Exemple : 17222 ZM 2377'); return; }
+    showLoading('Recherche de la parcelle…');
+    await parRef(ref);
+  }
+}
+
+// ─────────────────────────────────────────
+//  GÉOCODAGE ADRESSE → COORDS
+// ─────────────────────────────────────────
+async function geocodeEtAnalyse(q) {
+  try {
+    const r = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=1`);
+    const d = await r.json();
+    if (!d.features?.length) {
+      hideLoading();
+      showError('Adresse introuvable. Essayez la référence cadastrale directement (cadastre.gouv.fr).');
+      return;
+    }
+    const c = d.features[0].geometry.coordinates;
+    await parCoords(c[1], c[0]);
+  } catch {
+    hideLoading();
+    showError('Erreur réseau. Vérifiez votre connexion et réessayez.');
+  }
+}
+
+// ─────────────────────────────────────────
+//  HELPERS GÉOMÉTRIE (sans dépendance externe)
+// ─────────────────────────────────────────
+function pointInPolygon(point, geometry) {
+  const [px, py] = point;
+  function pip(ring) {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i], [xj, yj] = ring[j];
+      if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi)
+        inside = !inside;
+    }
+    return inside;
+  }
+  if (geometry.type === 'Polygon')      return pip(geometry.coordinates[0]);
+  if (geometry.type === 'MultiPolygon') return geometry.coordinates.some(p => pip(p[0]));
+  return false;
+}
+
+function getCentroid(geometry) {
+  const ring = geometry.type === 'Polygon'
+    ? geometry.coordinates[0]
+    : geometry.coordinates[0][0];
+  const n = ring.length;
+  return [ring.reduce((s,c)=>s+c[0],0)/n, ring.reduce((s,c)=>s+c[1],0)/n];
+}
+
+// ─────────────────────────────────────────
+//  PAR COORDONNÉES → PARCELLE IGN
+//  Stratégie : boîte englobante ~160m autour
+//  du point BAN → point-dans-polygone pour
+//  trouver la bonne parcelle même quand le
+//  géocodage atterrit sur la chaussée.
+// ─────────────────────────────────────────
+async function parCoords(lat, lon) {
+  setLoadingMsg('Récupération de la parcelle cadastrale…');
+  try {
+    // Boîte ~200m × ~200m autour du point géocodé (BAN peut être décalé de 50-100m)
+    const dLat = 0.0009, dLon = 0.0012;
+    const bbox = {
+      type: 'Polygon',
+      coordinates: [[
+        [lon - dLon, lat - dLat],
+        [lon + dLon, lat - dLat],
+        [lon + dLon, lat + dLat],
+        [lon - dLon, lat + dLat],
+        [lon - dLon, lat - dLat]
+      ]]
+    };
+    const geom = encodeURIComponent(JSON.stringify(bbox));
+    const r = await fetch(`https://apicarto.ign.fr/api/cadastre/parcelle?geom=${geom}&_limit=100`);
+    const data = await r.json();
+
+    // Exclure micro-parcelles voirie/trottoir < 80m²
+    const parcelles = (data.features || []).filter(f => (f.properties.contenance || 0) >= 80);
+
+    if (!parcelles.length) {
+      hideLoading();
+      showError('Aucune parcelle trouvée à cette adresse. Essayez la référence cadastrale.');
+      return;
+    }
+
+    // 1) Chercher la parcelle qui CONTIENT le point BAN
+    const contenant = parcelles.filter(f => pointInPolygon([lon, lat], f.geometry));
+
+    let best;
+    if (contenant.length > 0) {
+      // Plusieurs parcelles contenant le point → la plus petite (la plus précise)
+      best = contenant.sort((a, b) => (a.properties.contenance||0) - (b.properties.contenance||0))[0];
+    } else {
+      // BAN sur la chaussée → parcelle dont le centroïde est le plus proche
+      best = parcelles
+        .map(f => { const c = getCentroid(f.geometry); return { f, d: Math.hypot(c[0]-lon, c[1]-lat) }; })
+        .sort((a, b) => a.d - b.d)[0].f;
+    }
+
+    hideLoading();
+    showMapValidation(parcelles, best, lat, lon);
+  } catch {
+    hideLoading();
+    showError('Impossible d\'accéder aux données cadastrales (IGN). Réessayez ou utilisez la référence cadastrale.');
+  }
+}
+
+// ─────────────────────────────────────────
+//  PAR RÉFÉRENCE CADASTRALE → PARCELLE IGN
+// ─────────────────────────────────────────
+async function parRef(ref) {
+  setLoadingMsg('Récupération de la parcelle cadastrale…');
+  try {
+    const url = `https://apicarto.ign.fr/api/cadastre/parcelle?code_insee=${ref.codeInsee}&section=${ref.section}&numero=${ref.numero}&_limit=1`;
+    const r = await fetch(url);
+    const d = await r.json();
+    if (!d.features?.length) {
+      hideLoading();
+      showError('Parcelle non trouvée. Vérifiez la référence (ex : 17222 ZM 2377).');
+      return;
+    }
+    const p = d.features[0];
+    // centroïde depuis bbox
+    const bbox = p.bbox || [0,0,0,0];
+    const lat = (bbox[1] + bbox[3]) / 2;
+    const lon = (bbox[0] + bbox[2]) / 2;
+    await traiterParcelle(p, lat, lon);
+  } catch {
+    hideLoading();
+    showError('Erreur lors de la recherche cadastrale. Vérifiez la référence.');
+  }
+}
+
+// ─────────────────────────────────────────
+//  TRAITEMENT PRINCIPAL DE LA PARCELLE
+// ─────────────────────────────────────────
+async function traiterParcelle(parcelle, lat, lon) {
+  const props     = parcelle.properties || {};
+  const surface   = props.surface_parcelle || props.contenance || null;
+  const codeInsee = props.code_commune || props.code_insee || null;
+  const idu       = props.idu || null;
+
+  // ── Zone PLU — API GPU IGN ──
+  setLoadingMsg('Vérification du zonage PLU…');
+  let pluZone = null, pluLib = null;
+  try {
+    const gpuGeom = encodeURIComponent(JSON.stringify({type:'Point',coordinates:[lon,lat]}));
+    const r = await fetch(`https://apicarto.ign.fr/api/gpu/zone-urba?geom=${gpuGeom}`);
+    if (r.ok) {
+      const d = await r.json();
+      if (d.features?.length) {
+        const z = d.features[0].properties;
+        pluZone = z.typezone || null;
+        pluLib  = z.libelle  || null;
+      }
+    }
+  } catch { /* PLU non dispo — on continue */ }
+
+  // ── Prix au m² — Table DVF calibrée localement (prioritaire) + Cerema fallback ──
+  const PRIX_DVF = {
+    '17222': { b: -0.137, ref500: 356, nom: 'Marsilly',       date: '2024' },
+    '17264': { b: -0.25,  ref500: 583, nom: 'Nieul-sur-Mer',  date: '2024' },
+    '17190': { b: -0.25,  ref500: 489, nom: "L'Houmeau",      date: '2024' },
+    '17153': { b: -0.137, ref500: 310, nom: 'Esnandes',       date: '2024', estim: true },
+    '17200': { b: -0.21,  ref500: 860, nom: 'Lagord',         date: '2025' },
+  };
+  let dvfEntry = codeInsee ? (PRIX_DVF[codeInsee] || null) : null;
+  let prixM2 = null;
+
+  setLoadingMsg('Récupération des données de marché…');
+
+  if (dvfEntry) {
+    prixM2 = dvfEntry.ref500;
+  } else if (codeInsee) {
+    try {
+      const r = await fetch(`https://apidf-preprod.cerema.fr/indicateurs/dv3f/commune/${codeInsee}/`, { signal: AbortSignal.timeout(6000) });
+      if (r.ok) {
+        const d = await r.json();
+        const item = Array.isArray(d)
+          ? (d.find(x => /terrain/i.test(x.type_local || '')) || d[d.length - 1])
+          : d;
+        prixM2 = item?.prix_m2_median || item?.valeur_fonciere_median || null;
+      }
+    } catch { /* timeout ou CORS */ }
+  }
+  // prixM2 reste null si commune non dans PRIX_DVF et Cerema indisponible
+
+  // ── Calcul TFPNB estimé ──
+  // TFPNB = base (VLC × 75% × taux TFPNB) + majoration terrains constructibles (art. 1396 CGI)
+  // Majoration : 5€/m² ajoutés à la base × taux communal moyen ~20%
+  // VLC terrain non bâti zone U : ~0,80€/m², taux TFPNB moyen dept 17 : ~20%
+  let tfpnb = null;
+  if (surface) {
+    const base = Math.round(surface * 0.80 * 0.75 * 0.20);
+    const majorationTax = isConstructible(pluZone) ? Math.round(surface * 5 * 0.20) : 0;
+    tfpnb = base + majorationTax;
+  }
+
+  // ── Valeur marché estimée ──
+  const valeur = (surface && prixM2) ? Math.round(surface * prixM2) : null;
+
+  hideLoading();
+  afficherResultats(surface, pluZone, pluLib, prixM2, tfpnb, valeur, idu, dvfEntry);
+}
+
+// ─────────────────────────────────────────
+//  AFFICHAGE RÉSULTATS
+// ─────────────────────────────────────────
+function isConstructible(zone) {
+  if (!zone) return false;
+  return /^U|^AU|^1AU/i.test(zone.trim());
+}
+
+// Règles indicatives par type de zone PLU (CES typique France)
+function getZoneRules(zone) {
+  if (!zone) return null;
+  const z = zone.toUpperCase().trim();
+
+  // Zone U — sous-zones courantes
+  if (/^UA/.test(z)) return { ces: 0.60, niveaux: 3, label: 'Centre-bourg, tissu dense continu',      constructible: true };
+  if (/^UB/.test(z)) return { ces: 0.40, niveaux: 2, label: 'Résidentiel groupé, habitat collectif',  constructible: true };
+  if (/^UC/.test(z)) return { ces: 0.30, niveaux: 2, label: 'Résidentiel diffus, pavillonnaire',       constructible: true };
+  if (/^UD/.test(z)) return { ces: 0.20, niveaux: 2, label: 'Habitat individuel lâche, périphérie',   constructible: true };
+  if (/^UE/.test(z)) return { ces: 0.40, niveaux: 2, label: 'Zone d\'équipements publics',            constructible: true };
+  if (/^UI|^UY/.test(z)) return { ces: 0.50, niveaux: 2, label: 'Zone d\'activités économiques',      constructible: true };
+  if (/^U/.test(z))  return { ces: 0.30, niveaux: 2, label: 'Zone urbaine — résidentiel standard',    constructible: true };
+
+  // Zone AU — à urbaniser
+  if (/^1AU|^AUa|^AUb/.test(z)) return { ces: 0.25, niveaux: 2, label: 'À urbaniser à court terme — opération d\'ensemble requise', constructible: true };
+  if (/^2AU/.test(z))            return { ces: null,  niveaux: null, label: 'À urbaniser long terme — non constructible sans révision du PLU', constructible: false };
+  if (/^AU/.test(z))             return { ces: 0.25,  niveaux: 2, label: 'Zone à urbaniser',          constructible: true };
+
+  // Zones non constructibles
+  if (/^A/.test(z)) return { ces: null, niveaux: null, label: 'Zone agricole — construction d\'habitation interdite', constructible: false };
+  if (/^N/.test(z)) return { ces: null, niveaux: null, label: 'Zone naturelle et forestière — inconstructible',       constructible: false };
+
+  return null;
+}
+
+function afficherResultats(surface, pluZone, pluLib, prixM2, tfpnb, valeur, idu, dvfEntry) {
+  _ficheData = { surface, pluZone, pluLib, prixM2, valeur, idu, dvfEntry };
+  const constructible = isConstructible(pluZone);
+
+  // Ref cadastrale
+  let ref = '—', refUrl = '#';
+  if (idu) {
+    const sec = idu.slice(8, 10);
+    const num = idu.slice(10, 14);
+    ref = `${sec} ${num.replace(/^0+/, '')}`;
+    refUrl = `https://cadastre.gouv.fr/scpc/afficherListeParcelles.do?commune=${idu.slice(0,5)}&section=${sec}&numeroParcelle=${num}`;
+  }
+
+  const steps = [
+    {
+      loading: 'Vérification de la parcelle…',
+      done: `Parcelle <strong>${ref}</strong> · <a href="${refUrl}" target="_blank" style="color:#1E8A4A;font-weight:600;">vérifier sur cadastre.gouv.fr</a>`
+    },
+    {
+      loading: 'Vérification du zonage PLU…',
+      done: `Zone <strong>${pluZone || 'inconnue'}</strong>`
+    },
+    {
+      loading: 'Analyse de la constructibilité…',
+      done: constructible
+        ? 'Terrain <strong>constructible</strong>'
+        : `Terrain <strong>non constructible</strong> — zone ${pluLib || pluZone || '?'}`
+    },
+    {
+      loading: 'Calcul de la surface…',
+      done: `Surface totale : <strong>${surface ? surface.toLocaleString('fr-FR') + ' m²' : '—'}</strong>`
+    }
+  ];
+
+  // Reset
+  const checklist = document.getElementById('checklist');
+  checklist.innerHTML = '';
+  ['div-m2','ready-banner','blurred-zone','lead-form','real-results'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('lead-err').style.display = 'none';
+  document.getElementById('inp-m2').value = '';
+  ['lead-prenom','lead-nom','lead-email','lead-tel'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = ''; el.classList.remove('err');
+  });
+
+  document.getElementById('results').style.display = 'block';
+  setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+
+  // Créer les items (invisibles)
+  steps.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'check-item';
+    div.id = `chk-${i}`;
+    div.style.cssText = 'opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s;';
+    div.innerHTML = `<div class="chk-left" id="chk-left-${i}"></div><div class="chk-txt" id="chk-txt-${i}" style="color:#888;">${s.loading}</div>`;
+    checklist.appendChild(div);
+  });
+
+  const APPEAR   = 100;  // délai avant 1re étape
+  const THINKING = 500;  // temps "réflexion"
+  const GAP      = 150;  // pause entre étapes
+
+  steps.forEach((s, i) => {
+    const t0 = APPEAR + i * (THINKING + GAP);
+
+    // Apparition avec spinner
+    setTimeout(() => {
+      const item = document.getElementById(`chk-${i}`);
+      const left = document.getElementById(`chk-left-${i}`);
+      item.style.opacity = '1';
+      item.style.transform = 'translateY(0)';
+      left.innerHTML = '<div class="chk-spinner"></div>';
+    }, t0);
+
+    // Résolution avec ✅
+    setTimeout(() => {
+      const left = document.getElementById(`chk-left-${i}`);
+      const txt  = document.getElementById(`chk-txt-${i}`);
+      left.innerHTML = '<div style="width:22px;height:22px;background:#1E8A4A;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 12 10" width="11" height="9"><polyline points="1,5.5 4.5,9 11,1" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+      txt.style.color = '#111';
+      txt.innerHTML = s.done;
+
+      // Après la dernière étape → boîte m² uniquement
+      if (i === steps.length - 1) {
+        setTimeout(() => {
+          const m2div = document.getElementById('div-m2');
+          m2div.style.cssText = 'display:block;opacity:0;transition:opacity .4s;';
+          requestAnimationFrame(() => requestAnimationFrame(() => { m2div.style.opacity = '1'; }));
+          m2div.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    }, t0 + THINKING);
+  });
+
+  // Pixel ViewContent
+  if (typeof fbq === 'function') {
+    fbq('track', 'ViewContent', {
+      content_name: 'terrain_analyse',
+      content_category: constructible ? 'constructible' : 'autre',
+      value: valeur || 0,
+      currency: 'EUR'
+    });
+  }
+}
+
+// ─────────────────────────────────────────
+//  VALIDATION m² → révèle le bloc brouillé
+// ─────────────────────────────────────────
+const DEV_BYPASS_FORM = false; // ← passer à false pour réactiver flou + formulaire
+
+function validerM2() {
+  if (DEV_BYPASS_FORM) {
+    remplirFiche();
+    const rr = document.getElementById('real-results');
+    rr.style.cssText = 'display:block;opacity:0;transition:opacity .4s;';
+    requestAnimationFrame(() => requestAnimationFrame(() => { rr.style.opacity = '1'; }));
+    rr.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  function fadeIn(el) {
+    el.style.opacity = '0';
+    el.style.transition = 'opacity .4s';
+    requestAnimationFrame(() => requestAnimationFrame(() => { el.style.opacity = '1'; }));
+  }
+
+  const banner = document.getElementById('ready-banner');
+  banner.style.display = 'block';
+  fadeIn(banner);
+
+  const bz = document.getElementById('blurred-zone');
+  bz.style.display = 'block';
+  fadeIn(bz);
+
+  setTimeout(() => {
+    const lf = document.getElementById('lead-form');
+    lf.style.display = 'block';
+    fadeIn(lf);
+    lf.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 350);
+}
+
+// ─────────────────────────────────────────
+//  FICHE ANALYSE
+// ─────────────────────────────────────────
+function remplirFiche() {
+  const { surface, pluZone, pluLib, prixM2, valeur, idu } = _ficheData;
+  const constructible = isConstructible(pluZone);
+
+  // Date
+  document.getElementById('fiche-date').textContent =
+    new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+
+  // Ref & titre
+  let ref = '—';
+  if (idu) {
+    const sec = idu.slice(8, 10);
+    const num = idu.slice(10, 14).replace(/^0+/, '');
+    ref = `${sec} ${num}`;
+  }
+  document.getElementById('fiche-titre').textContent = `Parcelle ${ref}`;
+  document.getElementById('fiche-ref').textContent = ref;
+  document.getElementById('fiche-surface').textContent = surface ? `${surface.toLocaleString('fr-FR')} m²` : '—';
+  document.getElementById('fiche-zone').textContent = pluZone ? `Zone ${pluZone}${pluLib ? ' — ' + pluLib : ''}` : '—';
+
+  // Badge zone
+  const badge = document.getElementById('fiche-zone-badge');
+  if (pluZone) {
+    badge.textContent = constructible ? `✓ Zone ${pluZone} — Constructible` : `Zone ${pluZone} — Non constructible`;
+    badge.style.cssText += constructible
+      ? ';background:#D4F5E4;color:#145F33;'
+      : ';background:#FDE8CC;color:#7C3A00;';
+  }
+
+  // Division + Valeur — basées sur la part à céder, prix ajusté par surface
+  const { dvfEntry } = _ficheData;
+  const m2str = document.getElementById('inp-m2').value.trim();
+  const m2div = parseInt(m2str);
+
+  // Courbe puissance si données DVF locales, sinon prix plat
+  const prixM2eff = (dvfEntry && m2div > 0)
+    ? Math.round(dvfEntry.ref500 * Math.pow(m2div / 500, dvfEntry.b))
+    : prixM2;
+  const srcLabel = (dvfEntry && m2div > 0)
+    ? `${prixM2eff} €/m² · DVF ${dvfEntry.nom} ${dvfEntry.date}${dvfEntry.estim ? " (estimé)" : ""}`
+    : `${prixM2eff} €/m² · données DVF`;
+
+  const valCeder = (m2div > 0 && prixM2eff) ? Math.round(m2div * prixM2eff) : null;
+  if (valCeder) {
+    document.getElementById('fiche-valeur').textContent = `${valCeder.toLocaleString('fr-FR')} €`;
+    document.getElementById('fiche-prix-m2').textContent = `pour ${m2div.toLocaleString('fr-FR')} m² · ${srcLabel}`;
+  } else {
+    document.getElementById('fiche-valeur').textContent = 'Non disponible';
+    document.getElementById('fiche-prix-m2').textContent = 'Données DVF non calibrées pour cette commune';
+  }
+
+  if (m2div > 0 && surface && m2div < surface) {
+    const m2reste = surface - m2div;
+    document.getElementById('fiche-m2-ceder').textContent = `${m2div.toLocaleString('fr-FR')} m²`;
+    document.getElementById('fiche-val-ceder').textContent = valCeder ? `∼ ${valCeder.toLocaleString('fr-FR')} €` : '';
+    document.getElementById('fiche-m2-reste').textContent = `${m2reste.toLocaleString('fr-FR')} m²`;
+    document.getElementById('fiche-val-reste').textContent = '';
+    document.getElementById('fiche-division').style.display = 'block';
+  }
+
+  // Emprise au sol — basée sur la part à céder (m2div), pas sur la parcelle totale
+  const zoneRules = getZoneRules(pluZone);
+  if (m2div > 0 && zoneRules && zoneRules.constructible && zoneRules.ces) {
+    const emprise = Math.round(m2div * zoneRules.ces);
+    const cesPct  = Math.round(zoneRules.ces * 100);
+    document.getElementById('fiche-emprise').textContent = `${emprise.toLocaleString('fr-FR')} m²`;
+    document.getElementById('fiche-sp-formule').innerHTML =
+      `Zone ${pluZone} · CES ${cesPct}% — ${zoneRules.label}<br><em>Valeur typique — CES exact défini par le règlement PLU communal</em>`;
+    document.getElementById('fiche-plancher').style.display = 'block';
+  }
+
+  // Mini-carte satellite
+  if (_selectedParcel) {
+    setTimeout(() => {
+      const mapEl = document.getElementById('fiche-map');
+      if (_ficheMap) { _ficheMap.remove(); _ficheMap = null; }
+      _ficheMap = L.map(mapEl, { zoomControl: false, attributionControl: false,
+        dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false });
+      L.tileLayer(
+        'https://data.geopf.fr/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0' +
+        '&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg' +
+        '&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+        { maxZoom: 21 }
+      ).addTo(_ficheMap);
+      const layer = L.geoJSON(_selectedParcel, {
+        style: { color: '#F9D71C', weight: 3, fillColor: '#F9D71C', fillOpacity: 0.45 }
+      }).addTo(_ficheMap);
+      _ficheMap.fitBounds(layer.getBounds().pad(0.6));
+    }, 250);
+  }
+}
+
+// ─────────────────────────────────────────
+//  FORMULAIRE LEAD + RÉVÉLATION RÉSULTATS
+// ─────────────────────────────────────────
+function soumettreFormLead() {
+  const prenom = document.getElementById('lead-prenom').value.trim();
+  const nom    = document.getElementById('lead-nom').value.trim();
+  const email  = document.getElementById('lead-email').value.trim();
+  const tel    = document.getElementById('lead-tel').value.trim();
+  const m2     = document.getElementById('inp-m2').value.trim();
+  const errEl  = document.getElementById('lead-err');
+
+  // Validation email obligatoire
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+  if (!emailOk) {
+    document.getElementById('lead-email').classList.add('err');
+    errEl.textContent = 'Merci de renseigner un email valide pour recevoir votre analyse.';
+    errEl.style.display = 'block';
+    document.getElementById('lead-email').focus();
+    return;
+  }
+  document.getElementById('lead-email').classList.remove('err');
+  errEl.style.display = 'none';
+
+  // Masquer le formulaire et la zone brouillée
+  document.getElementById('lead-form').style.display = 'none';
+  document.getElementById('blurred-zone').style.display = 'none';
+  document.getElementById('ready-banner').style.display = 'none';
+
+  // Remplir et révéler la fiche analyse
+  remplirFiche();
+  const rr = document.getElementById('real-results');
+  rr.style.cssText = 'display:block;opacity:0;transition:opacity .5s;';
+  requestAnimationFrame(() => requestAnimationFrame(() => { rr.style.opacity = '1'; }));
+  rr.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Pixel Lead
+  if (typeof fbq === 'function') {
+    fbq('track', 'Lead', { content_name: 'terrain_analyse' });
+  }
+
+  // Envoi en arrière-plan vers Make (configurer l'URL du webhook)
+  const WEBHOOK = ''; // ← coller ici l'URL du webhook Make
+  if (WEBHOOK) {
+    fetch(WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prenom, nom, email, tel, m2_diviser: m2, date: new Date().toISOString() })
+    }).catch(() => {});
+  }
+}
+
+// ─────────────────────────────────────────
+//  MINI-CARTE VALIDATION PARCELLE
+// ─────────────────────────────────────────
+function showMapValidation(parcelles, best, lat, lon) {
+  _selectedParcel = best;
+  _layerMap = {};
+
+  const section = document.getElementById('map-validation');
+  section.style.display = 'block';
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+
+  if (_lMap) { _lMap.remove(); _lMap = null; }
+
+  _lMap = L.map('leaflet-map', { zoomControl: true, attributionControl: false });
+
+  const satellite = L.tileLayer(
+    'https://data.geopf.fr/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+    { maxZoom: 21, tileSize: 256 }
+  );
+  const plan = L.tileLayer(
+    'https://data.geopf.fr/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+    { maxZoom: 19 }
+  );
+  satellite.addTo(_lMap);
+  L.control.layers({ '🛰 Satellite': satellite, '🗺 Plan': plan }, {}, { position: 'topright' }).addTo(_lMap);
+
+  let bestBounds = null;
+  parcelles.forEach(f => {
+    const isSel = f.properties.idu === best.properties.idu;
+    const layer = L.geoJSON(f, {
+      style: isSel
+        ? { color: '#F9D71C', weight: 3, fillColor: '#F9D71C', fillOpacity: 0.45 }
+        : { color: '#ffffff', weight: 1.5, fillColor: '#1E8A4A', fillOpacity: 0.12 }
+    });
+    layer.on('click', (e) => { L.DomEvent.stopPropagation(e); selectParcelleOnMap(f); });
+    layer.addTo(_lMap);
+    _layerMap[f.properties.idu] = layer;
+    if (isSel) bestBounds = layer.getBounds();
+  });
+
+  if (bestBounds) _lMap.fitBounds(bestBounds.pad(1.5));
+  else _lMap.setView([lat, lon], 18);
+
+  updateMapLabel(best);
+}
+
+function selectParcelleOnMap(f) {
+  if (_selectedParcel && _layerMap[_selectedParcel.properties.idu]) {
+    _layerMap[_selectedParcel.properties.idu].setStyle({
+      color: '#ffffff', weight: 1.5, fillColor: '#1E8A4A', fillOpacity: 0.12
+    });
+  }
+  _selectedParcel = f;
+  if (_layerMap[f.properties.idu]) {
+    _layerMap[f.properties.idu].setStyle({
+      color: '#F9D71C', weight: 3, fillColor: '#F9D71C', fillOpacity: 0.45
+    });
+  }
+  updateMapLabel(f);
+}
+
+function updateMapLabel(f) {
+  const sec = f.properties.section || '';
+  const num = (f.properties.numero || '').replace(/^0+/, '');
+  document.getElementById('map-parcel-label').textContent = `${sec} ${num}`;
+}
+
+async function validerParcelleMap() {
+  if (!_selectedParcel) return;
+  hideMapValidation();
+  const c = getCentroid(_selectedParcel.geometry); // [lon, lat]
+  showLoading('Analyse en cours…');
+  await traiterParcelle(_selectedParcel, c[1], c[0]);
+}
+
+function hideMapValidation() {
+  document.getElementById('map-validation').style.display = 'none';
+  if (_lMap) { _lMap.remove(); _lMap = null; }
+}
+
+function useRefCadastrale() {
+  hideMapValidation();
+  hideLoading();
+  switchTab('cadastre');
+}
+
+// ─────────────────────────────────────────
+//  TRACKING CTA
+// ─────────────────────────────────────────
+function trackCTA() {
+  if (typeof fbq === 'function') fbq('track', 'Lead', { content_name: 'demande_terrain' });
+}
+
+// ─────────────────────────────────────────
+//  HELPERS UI
+// ─────────────────────────────────────────
+function showLoading(msg) {
+  document.getElementById('loading-msg').textContent = msg || 'Analyse en cours…';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('btn-analyser').disabled = true;
+}
+
+function setLoadingMsg(msg) {
+  document.getElementById('loading-msg').textContent = msg;
+}
+
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('btn-analyser').disabled = false;
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideError()   { document.getElementById('error-box').style.display = 'none'; }
+function hideResults() {
+  document.getElementById('results').style.display = 'none';
+}
+</script>
+</body>
+</html>
