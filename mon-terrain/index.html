@@ -896,14 +896,20 @@ function getZoneRules(zone) {
   if (!zone) return null;
   const z = zone.toUpperCase().trim();
 
-  // Zone U — sous-zones courantes
-  if (/^UA/.test(z)) return { ces: 0.60, niveaux: 3, label: 'Centre-bourg, tissu dense continu',      constructible: true };
-  if (/^UB/.test(z)) return { ces: 0.40, niveaux: 2, label: 'Résidentiel groupé, habitat collectif',  constructible: true };
-  if (/^UC/.test(z)) return { ces: 0.30, niveaux: 2, label: 'Résidentiel diffus, pavillonnaire',       constructible: true };
-  if (/^UD/.test(z)) return { ces: 0.20, niveaux: 2, label: 'Habitat individuel lâche, périphérie',   constructible: true };
-  if (/^UE/.test(z)) return { ces: 0.40, niveaux: 2, label: 'Zone d\'équipements publics',            constructible: true };
-  if (/^UI|^UY/.test(z)) return { ces: 0.50, niveaux: 2, label: 'Zone d\'activités économiques',      constructible: true };
-  if (/^U/.test(z))  return { ces: 0.30, niveaux: 2, label: 'Zone urbaine — résidentiel standard',    constructible: true };
+  // Zone U — sous-zones avec CES typiques documentés (France métropolitaine)
+  if (/^UA/.test(z)) return { ces: 0.60, niveaux: 3, label: 'Centre-bourg, tissu dense continu',     constructible: true };
+  if (/^UB/.test(z)) return { ces: 0.40, niveaux: 2, label: 'Résidentiel groupé, habitat collectif', constructible: true };
+  if (/^UC/.test(z)) return { ces: 0.30, niveaux: 2, label: 'Résidentiel diffus, pavillonnaire',      constructible: true };
+  if (/^UD/.test(z)) return { ces: 0.20, niveaux: 2, label: 'Habitat individuel lâche, périphérie',  constructible: true };
+  if (/^UE/.test(z)) return { ces: 0.40, niveaux: 2, label: 'Zone d\'équipements publics',           constructible: true };
+  if (/^UI|^UY/.test(z)) return { ces: 0.50, niveaux: 2, label: 'Zone d\'activités économiques',     constructible: true };
+  // Zones U spécifiques : règles très variables selon les PLU — pas de CES générique fiable
+  if (/^UL/.test(z)) return { ces: null, niveaux: null, label: 'Zone de loisirs — CES variable selon PLU', constructible: true };
+  if (/^UV/.test(z)) return { ces: null, niveaux: null, label: 'Zone verte/voirie — CES variable selon PLU', constructible: true };
+  if (/^UP/.test(z)) return { ces: null, niveaux: null, label: 'Zone portuaire ou de protection — CES variable selon PLU', constructible: true };
+  if (/^UX|^UZ|^US|^UM/.test(z)) return { ces: null, niveaux: null, label: 'Zone urbaine spécifique — CES variable selon PLU', constructible: true };
+  // Catch-all U non identifiée : constructible probable mais règles inconnues
+  if (/^U/.test(z))  return { ces: null, niveaux: null, label: 'Zone urbaine — sous-zone non standardisée', constructible: true };
 
   // Zone AU — à urbaniser
   if (/^1AU|^AUa|^AUb/.test(z)) return { ces: 0.25, niveaux: 2, label: 'À urbaniser à court terme — opération d\'ensemble requise', constructible: true };
@@ -1131,7 +1137,12 @@ function remplirFiche() {
     const cesPct  = Math.round(zoneRules.ces * 100);
     document.getElementById('fiche-emprise').textContent = `${emprise.toLocaleString('fr-FR')} m²`;
     document.getElementById('fiche-sp-formule').innerHTML =
-      `Zone ${pluZone} · CES ${cesPct}% — ${zoneRules.label}<br><em>Valeur typique — CES exact défini par le règlement PLU communal</em>`;
+      `Zone ${pluZone} · CES ${cesPct}% — ${zoneRules.label}<br><em>Valeur typique · CES exact à vérifier dans le <a href="https://www.geoportail-urbanisme.gouv.fr/" target="_blank" style="color:#1E8A4A;font-weight:600;">règlement PLU communal</a></em>`;
+    document.getElementById('fiche-plancher').style.display = 'block';
+  } else if (m2div > 0 && zoneRules && zoneRules.constructible && !zoneRules.ces) {
+    document.getElementById('fiche-emprise').textContent = 'À vérifier';
+    document.getElementById('fiche-sp-formule').innerHTML =
+      `Zone ${pluZone} · ${zoneRules.label}<br><em>CES non standardisé pour cette zone · Consultez le <a href="https://www.geoportail-urbanisme.gouv.fr/" target="_blank" style="color:#1E8A4A;font-weight:600;">règlement PLU de votre commune</a></em>`;
     document.getElementById('fiche-plancher').style.display = 'block';
   }
 
